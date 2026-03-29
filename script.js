@@ -3,6 +3,7 @@ let cards = [];
 // Which card is currently targeted for a new todo
 let activeTodoCardId = null;
 
+// ─── DOM References ───────────────────────────────────
 const board = document.getElementById("board");
 const boardEmpty = document.getElementById("board-empty");
 const toast = document.getElementById("toast");
@@ -26,7 +27,7 @@ const modalTodoConfirm = document.getElementById("modal-todo-confirm");
 // Share
 const btnShare = document.getElementById("btn-share");
 
-// Helpers
+// ─── Helpers ──────────────────────────────────────────
 function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
@@ -47,6 +48,7 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+// ─── Render ───────────────────────────────────────────
 function render() {
   // Remove existing card elements (keep the empty state node)
   document.querySelectorAll(".card").forEach((el) => el.remove());
@@ -95,6 +97,11 @@ function buildCardEl(card) {
         </div>
         <span class="card-progress-text">${progress}% complete</span>
       </div>
+      <!-- ── NEW: Clear All button added by Anuhas ── -->
+      <button class="btn-clear-all" data-card-id="${card.id}" title="Clear all todos" ${totalCount === 0 ? "disabled" : ""}>
+        Clear All
+      </button>
+      <!-- ─────────────────────────────────────────── -->
       <button class="btn-add-todo" data-card-id="${card.id}">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add todo
@@ -106,6 +113,12 @@ function buildCardEl(card) {
   el.querySelector(".btn-card-delete").addEventListener("click", () => {
     deleteCard(card.id);
   });
+
+  // ── NEW: Wire clear-all ──────────────────────────
+  el.querySelector(".btn-clear-all").addEventListener("click", () => {
+    clearAllTodos(card.id);
+  });
+  // ────────────────────────────────────────────────
 
   el.querySelector(".btn-add-todo").addEventListener("click", () => {
     activeTodoCardId = card.id;
@@ -205,6 +218,23 @@ function deleteTodo(cardId, todoId) {
   render();
 }
 
+// ── NEW FUNCTION: Clear All Todos ──────────────────────
+/**
+ * clearAllTodos - removes all todos from a given card.
+ * Added by Anuhas via feature/clear-all branch.
+ *
+ * @param {string} cardId - the ID of the card to clear
+ */
+function clearAllTodos(cardId) {
+  const card = cards.find((c) => c.id === cardId);
+  if (!card) return;
+  if (card.todos.length === 0) return;
+  card.todos = [];
+  render();
+  showToast("All todos cleared");
+}
+// ──────────────────────────────────────────────────────
+
 // ─── Persistence: URL Hash ────────────────────────────
 function saveToHash() {
   try {
@@ -256,6 +286,8 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
   showToast("Board link copied ✓");
 }
+
+// ─── Event Bindings ───────────────────────────────────
 
 // Open card modal
 btnAddCard.addEventListener("click", () =>
@@ -329,6 +361,6 @@ document.addEventListener("keydown", (e) => {
     closeModal(modalTodo, todoTextInput);
 });
 
-// Initial load
+// ─── Init ─────────────────────────────────────────────
 loadFromHash();
 render();
